@@ -1,8 +1,10 @@
-install.packages("caret")
-library(caret)
-library(dplyr)
+install.packages("datawizard")
+install.packages("randomForest")
 
-source <- read.csv("Wine_Quality_Data.csv")
+library("datawizard")
+library("randomForest")
+
+source <- read.csv("Skyserver.csv")
 
 ##################################################### DATA CLEANING ##################################################################
 
@@ -29,46 +31,8 @@ rm(source_null)
 rm(valori_null)
 #rm(source)
 
-################################################### DATA VISUALIZZATION ###############################################################
-
-#Acidità fisso (Fixed acidity): g/l (grammi per litro)
-hist(data$fixed_acidity, col= "#F7D451", main = "", xlab="Acidità fissa", ylab="g/l")
-
-#Acidità volatile (Volatile acidity): g/l (grammi per litro)
-hist(data$volatile_acidity, col= "#F7D451", main = "", xlab="Acidità volatile", ylab="g/l")
-
-#Acido citrico (Citric acid): g/l (grammi per litro)
-hist(data$citric_acid, col= "#F7D451", main = "", xlab="Acido citrico", ylab="g/l")
-
-#Zucchero residuo (Residual sugar): g/l (grammi per litro)
-hist(data$residual_sugar, col= "#F7D451", main = "", xlab="Zucchero residuo", ylab="g/l")
-
-#Cloruri (Chlorides): g/l (grammi per litro)
-hist(data$chlorides, col= "#F7D451", main = "", xlab="Cloruri", ylab="g/l")
-
-#Anidride solforosa libera (Free sulfur dioxide): mg/l (milligrammi per litro)
-hist(data$free_sulfur_dioxide, col= "#F7D451", main = "", xlab="Anidride solforosa libera", ylab="mg/l")
-
-#Anidride solforosa totale (Total sulfur dioxide): mg/l (milligrammi per litro)
-hist(data$total_sulfur_dioxide, col= "#F7D451", main = "", xlab="Anidride solforosa totale", ylab="mg/l")
-
-#Densità (Density): g/cm³ (grammi per centimetro cubo)
-hist(data$density, col= "#F7D451", main = "", xlab="Densità", ylab="g/cm³")
-
-#pH: unità di pH
-hist(data$pH, col= "#F7D451", main = "", xlab="pH", ylab="livello")
-
-#Solfati (Sulphates): g/l (grammi per litro)
-hist(data$sulphates, col= "#F7D451", main = "", xlab="Solfati", ylab="g/l")
-
-#Alcol (Alcohol): % vol. (percentuale per volume)
-hist(data$alcohol, col= "#F7D451", main = "", xlab="Alcol", ylab="% vol")
-
-#Qualità (Quality): punteggio da 0 a 10
-hist(data$quality, col= "#F7D451", main = "", xlab="Qualità", ylab="punteggio")
-
-#Colore
-pie(table(data$color), labels = c("Rossi", "Bianchi"), col = c("#722f37", "#f8f8ff"))
+data <- data[,-1]
+data <- data[,-9]
 
 ################################################# CORRELATION ANALYSIS #################################################################
 
@@ -79,7 +43,7 @@ encode_labels <- function(column) {
 }
 
 # specie e isola (categorici) subiscono anch'essi una modifica
-data$color <- as.numeric(as.factor(data$color))
+data$class <- as.numeric(as.factor(data$class))
 
 cormatrix <- cor(data)
 cormatrix
@@ -89,15 +53,21 @@ heatmap(cormatrix,
         col = colorRampPalette(c("#99D9EA", "white", "#FF7F50"))(100), 
         main = "Heatmap della correlazione tra attributi")
 
-###################################################### UNDERSAMPLING ####################################################################
+#################################################### STANDARDIZATION + NORMALIZATION###################################################################
 
-white <- data %>% filter (data$color == 2)
-white_under <- white[sample(nrow(white), 2000, replace = FALSE),]
+data <- scale(data)
+data <- as.data.frame(normalize(data))
+names(data) <- names(source[,-c(1,10)])
 
-ggplot(white, aes(x = fixed_acidity)) +
-  geom_density() +
-  theme_classic()
+####################################################### DECISION TREE ANALYSIS ###########################################################
 
-ggplot(white_under, aes(x = fixed_acidity)) +
-  geom_density() +
-  theme_classic()
+ntrain <- ceiling(2*NROW(data)/3)
+
+train <- sample(NROW(data),ntrain)
+
+rf <- randomForest(as.factor(class) ~ . , data = data , subset = train)
+rf
+
+plot(rf, col="#A20045", main="Random forest")
+varImpPlot(rf, main="Variable importance", pch = 19, color="#A20045")
+
