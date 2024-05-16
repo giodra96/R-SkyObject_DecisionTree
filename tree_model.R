@@ -1,8 +1,8 @@
-install.packages("datawizard")
-install.packages("randomForest")
+install.packages(datawizard)
+install.packages(randomForest)
 
-library("datawizard")
-library("randomForest")
+library(datawizard)
+library(randomForest)
 library(dplyr)
 
 source <- read.csv("Skyserver.csv")
@@ -111,24 +111,28 @@ heatmap(cormatrix,
 
 #################################################### STANDARDIZATION + NORMALIZATION ###################################################################
 
-data <- scale(data)
+data <- as.data.frame(cbind(scale(data[,-16]),data[,16]))
+colnames(data)[names(data)== "V16"] <- "class"
 #data <- as.data.frame(normalize(data))
 #names(data) <- names(source[,-c(1,10)])
 
 ####################################################### DECISION TREE ANALYSIS ###########################################################
 
+set.seed(123)
+
 ntrain <- ceiling(2*NROW(data)/3)
 
-train <- sample(NROW(data),ntrain)
-
-my.mtry <- tuneRF(data[,-16],as.factor(data$class), ntreeTry=500,
-                  stepFactor=1.5,improve=0.001, trace=TRUE, plot=TRUE)
+train <- sample(NROW(data),ntrain, replace = FALSE)
+test <- setdiff(data, train)
 
 rf <- randomForest(as.factor(class) ~ . , data = data, mtry=3, subset = train)
 rf
 
 plot(rf, col="#A20045", main="Random forest")
 varImpPlot(rf, main="Variable importance", pch = 19, color="#A20045")
+
+my.mtry <- tuneRF(data[,-16],as.factor(data$class), ntreeTry=500,
+                  stepFactor=1.5,improve=0.001, trace=TRUE, plot=TRUE)
 
 ################################################
 #Completare random forest variando i parametri + var imp + undersampling
