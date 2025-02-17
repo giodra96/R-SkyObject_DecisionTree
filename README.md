@@ -1,4 +1,4 @@
-# R-SkyObjects_DecisionTree
+# Decision Tree for Sky Object Classification
 
 The Sloan Digital Sky Survey (SDSS) was a groundbreaking, two-decade-long astronomical project that meticulously collected data on the brightness, electromagnetic waves, and movement of celestial objects. This was achieved through the use of advanced telescopes, digital cameras, and spectrographs. 
 
